@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VBook Reader — Animated Storybooks</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent:       #22d3ee;
+  --accent-dim:   #0e7490;
+  --bg:           #0a0e1a;
+  --bg-2:         #111d33;
+  --surface:      #1a2744;
+  --surface-2:    #243556;
+  --text:         #f1f5f9;
+  --text-muted:   #94a3b8;
+  --success:      #34d399;
+  --warning:      #fbbf24;
+  --danger:       #fb7185;
+  --glow:         rgba(34,211,238,0.5);
+  --glow-soft:    rgba(34,211,238,0.15);
+  --outline:      rgba(34,211,238,0.6);
+  --bg-radial:    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(34,211,238,0.18), transparent 70%);
+  --bg-grad:      linear-gradient(135deg, #0a0e1a 0%, #161a26 100%);
+  --glow-strength: 12px;
+  --outline-width: 2px;
+  --theme-intensity: 1;
+  --radius: 12px;
+  --radius-lg: 18px;
+}
+[data-theme="midnight"] { --accent:#818cf8; --accent-dim:#4f46e5; --bg:#0f0a1a; --bg-2:#1a1330; --surface:#241c40; --glow:rgba(129,140,248,0.5); --glow-soft:rgba(129,140,248,0.15); --outline:rgba(129,140,248,0.6); --bg-radial:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(129,140,248,0.18), transparent 70%); --bg-grad:linear-gradient(135deg,#0f0a1a 0%,#1b1626 100%); }
+[data-theme="sunset"]   { --accent:#fb923c; --accent-dim:#c2410c; --bg:#1a0f0a; --bg-2:#2a1a14; --surface:#3a2420; --glow:rgba(251,146,60,0.5); --glow-soft:rgba(251,146,60,0.15); --outline:rgba(251,146,60,0.6); --bg-radial:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,146,60,0.18), transparent 70%); --bg-grad:linear-gradient(135deg,#1a0f0a 0%,#261b16 100%); }
+[data-theme="rose"]     { --accent:#fb7185; --accent-dim:#e11d48; --bg:#1a0a10; --bg-2:#2a1318; --surface:#3a1c24; --glow:rgba(251,113,133,0.5); --glow-soft:rgba(251,113,133,0.15); --outline:rgba(251,113,133,0.6); --bg-radial:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251,113,133,0.18), transparent 70%); --bg-grad:linear-gradient(135deg,#1a0a10 0%,#26161c 100%); }
+[data-theme="violet"]   { --accent:#a78bfa; --accent-dim:#7c3aed; --bg:#0f0a1a; --bg-2:#1a1330; --surface:#241c40; --glow:rgba(167,139,250,0.5); --glow-soft:rgba(167,139,250,0.15); --outline:rgba(167,139,250,0.6); --bg-radial:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(167,139,250,0.18), transparent 70%); --bg-grad:linear-gradient(135deg,#0f0a1a 0%,#1b1626 100%); }
+[data-theme="forest"]   { --accent:#34d399; --accent-dim:#059669; --bg:#0d1f12; --bg-2:#1a2e1e; --surface:#2a4a2a; --glow:rgba(52,211,153,0.5); --glow-soft:rgba(52,211,153,0.15); --outline:rgba(52,211,153,0.6); --bg-radial:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(52,211,153,0.18), transparent 70%); --bg-grad:linear-gradient(135deg,#0d1f12 0%,#16261c 100%); }
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: var(--bg);
+  background-image: var(--bg-radial), var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Layout */
+header.app-bar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10,14,26,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--surface);
+  padding: 14px 20px;
+}
+.app-bar-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+}
+.brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.2rem; }
+.brand-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:1.1rem;
+  box-shadow: 0 0 var(--glow-strength) var(--glow);
+}
+.brand-text { background: linear-gradient(90deg, var(--accent), #fff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand-sub { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+
+.nav-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--surface-2);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.1s, background 0.2s;
+  text-decoration: none;
+}
+.btn:hover { box-shadow: 0 0 calc(var(--glow-strength) * 1.5) var(--glow); border-color: var(--accent); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent); }
+.btn-ghost { background: transparent; }
+.btn svg { width: 16px; height: 16px; }
+
+.theme-pill {
+  display:flex; align-items:center; gap:6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  font-size: 0.8rem; font-weight: 600;
+  cursor: pointer;
+}
+.theme-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--glow); }
+
+/* Main grid */
+main {
+  max-width: 1280px;
+  margin: 24px auto;
+  padding: 0 20px 40px;
+}
+.section-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.featured {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin-bottom: 36px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  box-shadow: 0 0 var(--glow-strength) var(--glow-soft);
+}
+.featured-art {
+  position: relative;
+  min-height: 320px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-2);
+  display:flex; align-items:center; justify-content:center;
+  overflow: hidden;
+}
+.featured-art::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.4) 100%);
+}
+.featured-art-emoji { font-size: 5rem; position: relative; z-index: 1; filter: drop-shadow(0 0 24px var(--glow-soft)); }
+.featured-info { padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.featured-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--accent); color: var(--bg);
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase; align-self: flex-start;
+  box-shadow: 0 0 12px var(--glow);
+}
+.featured-title { font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
+.featured-desc { color: var(--text-muted); font-size: 1rem; }
+.featured-meta { display:flex; gap:12px; flex-wrap: wrap; color: var(--text-muted); font-size: 0.85rem; }
+.meta-pill { padding: 4px 10px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--surface-2); }
+
+/* Story grid */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 40px;
+}
+.story-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column;
+}
+.story-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px var(--glow-soft); outline: var(--outline-width) solid var(--outline); outline-offset: -2px; }
+.story-art {
+  height: 140px;
+  background: var(--bg-2);
+  background-size: cover;
+  background-position: center;
+  display:flex; align-items:center; justify-content:center;
+  font-size: 3rem;
+}
+.story-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.story-title { font-weight: 700; font-size: 1rem; line-height: 1.3; }
+.story-desc { color: var(--text-muted); font-size: 0.85rem; flex: 1; }
+.story-meta { display:flex; gap:6px; flex-wrap: wrap; font-size: 0.72rem; }
+.story-level { padding: 3px 8px; border-radius: 6px; background: var(--bg-2); color: var(--accent); font-weight: 700; }
+
+/* Reader modal */
+.reader-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.85);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.reader-overlay.active { display: flex; }
+.reader-modal {
+  width: 100%; max-width: 1100px;
+  height: 85vh; max-height: 720px;
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius-lg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 40px var(--glow-soft);
+}
+.reader-header {
+  display:flex; align-items:center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--surface-2);
+  background: var(--bg-2);
+}
+.reader-title-block { display:flex; flex-direction: column; gap: 2px; }
+.reader-title { font-size: 1.1rem; font-weight: 700; }
+.reader-page-info { color: var(--text-muted); font-size: 0.78rem; }
+.reader-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
+}
+.reader-art {
+  position: relative;
+  background: var(--bg-2);
+  background-size: cover;
+  background-position: center;
+  display:flex; align-items:center; justify-content:center;
+  font-size: 6rem;
+  overflow: hidden;
+}
+.reader-art::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.4) 100%);
+}
+.reader-art-emoji { position: relative; z-index: 1; filter: drop-shadow(0 0 24px var(--glow-soft)); }
+.reader-text {
+  padding: 32px 36px;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 20px;
+  overflow-y: auto;
+}
+.reader-page-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--accent); color: var(--bg);
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  align-self: flex-start;
+  box-shadow: 0 0 12px var(--glow);
+}
+.reader-page-text {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.7;
+  color: var(--text);
+}
+.reader-page-narration {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-style: italic;
+  border-left: 3px solid var(--accent);
+  padding-left: 14px;
+}
+.reader-prompt-box {
+  background: var(--bg-2);
+  border: 1px solid var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.reader-prompt-box b { color: var(--accent); }
+
+.reader-footer {
+  display:flex; align-items:center; justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--surface-2);
+  background: var(--bg-2);
+  gap: 12px;
+}
+.reader-dots { display:flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.reader-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: width 0.2s, background 0.2s;
+  border: none;
+  padding: 0;
+}
+.reader-dot.active { width: 32px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 8px var(--glow); }
+.reader-dot:hover { background: var(--accent); }
+.reader-controls { display:flex; gap: 6px; }
+.reader-speed {
+  background: var(--surface);
+  border: 1px solid var(--surface-2);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+.anim-fade { animation: fadeIn 0.7s ease both; }
+.anim-float { animation: float 4s ease-in-out infinite, fadeIn 0.7s ease both; }
+.anim-zoom { animation: zoomIn 0.7s ease both; }
+.anim-slide-left { animation: slideLeft 0.7s ease both; }
+
+/* Empty / loading states */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.6; }
+.empty-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+
+footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 32px 20px 40px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .featured { grid-template-columns: 1fr; }
+  .featured-art { min-height: 200px; }
+  .reader-body { grid-template-columns: 1fr; }
+  .reader-art { min-height: 180px; font-size: 4rem; }
+  .reader-text { padding: 20px; }
+  .reader-page-text { font-size: 1.15rem; }
+  .app-bar-inner { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-bar">
+  <div class="app-bar-inner">
+    <div class="brand">
+      <div class="brand-icon">📖</div>
+      <div>
+        <div class="brand-text">VBook Reader</div>
+        <div class="brand-sub">Animated storybooks · ages 4–10</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-pill" id="themePill" onclick="cycleTheme()" title="Change theme">
+        <span class="theme-dot"></span>
+        <span id="themeName">Eloquent</span>
+      </button>
+      <a class="btn btn-ghost" href="../VocabForge/index.html" title="VocabForge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        VocabForge
+      </a>
+      <a class="btn btn-primary" href="../VBookMaker/index.html" title="Create your own story">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        Make a Story
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="section-title">Story of the Week</div>
+  <article class="featured" id="featuredStory">
+    <div class="featured-art" id="featuredArt"><span class="featured-art-emoji">🦊</span></div>
+    <div class="featured-info">
+      <span class="featured-badge">⭐ Featured</span>
+      <h1 class="featured-title" id="featuredTitle">Loading…</h1>
+      <p class="featured-desc" id="featuredDesc"></p>
+      <div class="featured-meta" id="featuredMeta"></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="openFeatured()">▶ Read Now</button>
+        <button class="btn" onclick="speakFeatured()">🔊 Listen</button>
+      </div>
+    </div>
+  </article>
+
+  <div class="section-title">Story Library</div>
+  <div class="story-grid" id="storyGrid"></div>
+</main>
+
+<footer>
+  VBook Reader is part of the <a href="../VocabForge/index.html">VocabForge</a> family. Build stories in <a href="../VBookMaker/index.html">VBook Maker</a>.
+</footer>
+
+<!-- Reader modal -->
+<div class="reader-overlay" id="readerOverlay" onclick="if(event.target===this) closeReader()">
+  <div class="reader-modal">
+    <div class="reader-header">
+      <div class="reader-title-block">
+        <div class="reader-title" id="readerTitle">Story</div>
+        <div class="reader-page-info" id="readerPageInfo">Page 1 of 1</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select class="reader-speed" id="readerSpeed" onchange="setSpeed(this.value)">
+          <option value="6000">Slow</option>
+          <option value="4500" selected>Normal</option>
+          <option value="3000">Fast</option>
+        </select>
+        <button class="btn" onclick="closeReader()">✕ Close</button>
+      </div>
+    </div>
+    <div class="reader-body">
+      <div class="reader-art" id="readerArt"><span class="reader-art-emoji">📖</span></div>
+      <div class="reader-text">
+        <span class="reader-page-badge" id="readerBadge">Page 1</span>
+        <p class="reader-page-text" id="readerText"></p>
+        <p class="reader-page-narration" id="readerNarration"></p>
+        <div class="reader-prompt-box" id="readerPrompt"></div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" id="readerSpeak" onclick="speakPage()">🔊 Read aloud</button>
+          <button class="btn" id="readerPause" onclick="togglePlay()">⏸ Pause</button>
+        </div>
+      </div>
+    </div>
+    <div class="reader-footer">
+      <div class="reader-controls">
+        <button class="btn" onclick="prevPage()">← Prev</button>
+        <button class="btn" onclick="nextPage()">Next →</button>
+      </div>
+      <div class="reader-dots" id="readerDots"></div>
+      <div class="reader-controls">
+        <button class="btn btn-ghost" onclick="toggleAuto()">⏯ Auto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="stories.js"></script>
+<script>
+/* ═══ Theme system ═══ */
+var THEMES = ['eloquent','midnight','sunset','rose','violet','forest'];
+var THEME_NAMES = { eloquent:'Eloquent', midnight:'Midnight', sunset:'Sunset', rose:'Rose', violet:'Violet', forest:'Forest' };
+function cycleTheme() {
+  var cur = document.documentElement.dataset.theme || 'eloquent';
+  var i = THEMES.indexOf(cur);
+  var next = THEMES[(i+1) % THEMES.length];
+  document.documentElement.dataset.theme = next;
+  document.getElementById('themeName').textContent = THEME_NAMES[next];
+  try { localStorage.setItem('vbookreader_theme', next); } catch(e){}
+}
+(function(){
+  try {
+    var saved = localStorage.getItem('vbookreader_theme');
+    if (saved && THEMES.indexOf(saved) !== -1) {
+      document.documentElement.dataset.theme = saved;
+      document.getElementById('themeName').textContent = THEME_NAMES[saved];
+    }
+  } catch(e){}
+})();
+
+/* ═══ Story loading ═══ */
+var currentStory = null;
+var currentPage = 0;
+var autoPlay = false;
+var autoTimer = null;
+var autoEnabled = false;
+
+function storyOfWeek() {
+  var week = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,1)) / (7*24*60*60*1000));
+  return STORIES[week % STORIES.length];
+}
+
+function renderFeatured() {
+  var s = storyOfWeek();
+  var art = document.getElementById('featuredArt');
+  art.style.backgroundImage = s.cover ? "url('" + s.cover + "')" : 'none';
+  document.getElementById('featuredTitle').textContent = s.title;
+  document.getElementById('featuredDesc').textContent = s.description;
+  document.getElementById('featuredMeta').innerHTML =
+    '<span class="meta-pill">📚 ' + s.level + '</span>' +
+    '<span class="meta-pill">📖 ' + s.pages.length + ' pages</span>' +
+    '<span class="meta-pill">⏱ ' + Math.ceil(s.pages.length * 6) + 's read</span>';
+  document.getElementById('featuredStory').dataset.storyId = s.id;
+}
+
+function renderGrid() {
+  var grid = document.getElementById('storyGrid');
+  var html = '';
+  STORIES.forEach(function(s){
+    var coverStyle = s.cover ? "background-image:url('" + s.cover + "');" : '';
+    html += '<article class="story-card" onclick="openStory(\'' + s.id + '\')">' +
+            '<div class="story-art" style="' + coverStyle + '">' + (s.cover ? '' : (s.emoji || '📖')) + '</div>' +
+            '<div class="story-body">' +
+            '<div class="story-title">' + escapeHtml(s.title) + '</div>' +
+            '<div class="story-desc">' + escapeHtml(s.description) + '</div>' +
+            '<div class="story-meta">' +
+            '<span class="story-level">' + s.level + '</span>' +
+            '<span style="color:var(--text-muted);">' + s.pages.length + ' pages</span>' +
+            '</div></div></article>';
+  });
+  grid.innerHTML = html;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+}
+
+/* ═══ Reader ═══ */
+function openStory(id) {
+  currentStory = STORIES.find(function(s){ return s.id === id; }) || storyOfWeek();
+  currentPage = 0;
+  document.getElementById('readerTitle').textContent = currentStory.title;
+  renderDots();
+  renderPage();
+  document.getElementById('readerOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function openFeatured() {
+  var id = document.getElementById('featuredStory').dataset.storyId;
+  openStory(id);
+}
+
+function closeReader() {
+  document.getElementById('readerOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  stopAuto();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function renderDots() {
+  var dots = document.getElementById('readerDots');
+  var html = '';
+  for (var i = 0; i < currentStory.pages.length; i++) {
+    html += '<button class="reader-dot ' + (i === currentPage ? 'active' : '') + '" onclick="goToPage(' + i + ')" aria-label="Page ' + (i+1) + '"></button>';
+  }
+  dots.innerHTML = html;
+}
+
+function renderPage() {
+  var page = currentStory.pages[currentPage];
+  document.getElementById('readerPageInfo').textContent = 'Page ' + (currentPage+1) + ' of ' + currentStory.pages.length;
+  document.getElementById('readerBadge').textContent = 'Page ' + (currentPage+1);
+
+  var art = document.getElementById('readerArt');
+  art.style.backgroundImage = page.image ? "url('" + page.image + "')" : 'none';
+  art.querySelector('.reader-art-emoji').style.display = page.image ? 'none' : 'block';
+
+  var animClass = 'anim-' + (page.animation || 'fade');
+  var text = document.getElementById('readerText');
+  text.className = 'reader-page-text ' + animClass;
+  text.textContent = page.text;
+
+  var narr = document.getElementById('readerNarration');
+  if (page.narration && page.narration !== page.text) {
+    narr.style.display = 'block';
+    narr.textContent = '"' + page.narration + '"';
+  } else {
+    narr.style.display = 'none';
+  }
+
+  var prompt = document.getElementById('readerPrompt');
+  if (page.vocabFocus) {
+    prompt.innerHTML = '<b>Look up:</b> ' + escapeHtml(page.vocabFocus.join(', ')) +
+      ' — tap any word on VocabForge\'s flashcard screen for definitions.';
+    prompt.style.display = 'block';
+  } else {
+    prompt.style.display = 'none';
+  }
+
+  renderDots();
+}
+
+function nextPage() {
+  if (currentPage < currentStory.pages.length - 1) {
+    currentPage++;
+    renderPage();
+  } else {
+    stopAuto();
+  }
+}
+function prevPage() {
+  if (currentPage > 0) { currentPage--; renderPage(); }
+}
+function goToPage(i) { currentPage = i; renderPage(); }
+
+function speakPage() {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var page = currentStory.pages[currentPage];
+  var utter = new SpeechSynthesisUtterance(page.narration || page.text);
+  utter.lang = 'en-US';
+  utter.rate = 0.9;
+  utter.pitch = 1.05;
+  window.speechSynthesis.speak(utter);
+}
+
+function speakFeatured() {
+  var s = storyOfWeek();
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var text = s.title + '. ' + s.description;
+  var utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+}
+
+function togglePlay() {
+  var btn = document.getElementById('readerPause');
+  if (autoEnabled) { stopAuto(); btn.textContent = '▶ Play'; }
+  else { startAuto(); btn.textContent = '⏸ Pause'; }
+}
+
+function startAuto() {
+  autoEnabled = true;
+  var ms = parseInt(document.getElementById('readerSpeed').value) || 4500;
+  speakPage();
+  autoTimer = setInterval(function(){
+    if (currentPage < currentStory.pages.length - 1) {
+      nextPage();
+      speakPage();
+    } else {
+      stopAuto();
+      document.getElementById('readerPause').textContent = '▶ Play';
+    }
+  }, ms);
+}
+
+function stopAuto() {
+  autoEnabled = false;
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function toggleAuto() {
+  togglePlay();
+}
+
+function setSpeed(v) {
+  if (autoEnabled) { stopAuto(); startAuto(); }
+}
+
+// Keyboard nav
+document.addEventListener('keydown', function(e){
+  if (!document.getElementById('readerOverlay').classList.contains('active')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextPage(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); prevPage(); }
+  else if (e.key === 'Escape') { closeReader(); }
+});
+
+/* ═══ URL param: ?story=X ═══ */
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  var id = p.get('story');
+  if (id) setTimeout(function(){ openStory(id); }, 200);
+})();
+
+/* ═══ Init ═══ */
+renderFeatured();
+renderGrid();
+</script>
+
+</body>
+</html>
